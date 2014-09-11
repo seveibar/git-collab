@@ -66,11 +66,11 @@ This mode will allow a user to mark a changed file "done" and push it to the ser
 
 2. Server returns the client's session id and connection details for a socket connection.
 
-### Client connecting to another client
+### Client connecting to a session
 
-1. Local client sends a connection request to the remote client
-2. The remote client sends a patch with all working copy changes to the local client
-3. The two clients enter a collaborative session in which each client can view and edit the same files.
+1. Local client requests a patch for the session
+2. Remote client sends patch for the session
+3. Local client indicates that it has entered the session
 
 ### Socket Protocol
 
