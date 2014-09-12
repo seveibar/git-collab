@@ -54,12 +54,20 @@ module.exports = {
 
         // Listen for private messages
         client.on('private', function(data){
+            console.log("private>", data);
             callAllListeners(listeners.onPrivateMessage, data);
         });
 
         // Listen for public messages
-        client.on("public", function(){
+        client.on("public", function(data){
+            console.log("public>", data);
             callAllListeners(listeners.onPublicMessage, data);
+        });
+
+        // Listen for all session messages
+        client.on("session", function(data){
+            console.log("session>", data);
+            callAllListeners(listeners.onSessionMessage,data);
         });
 
         // Listen for client disconnecting
@@ -79,7 +87,7 @@ module.exports = {
 
     // Sends a message to everyone in the session
     sendSessionMessage: function(message){
-        client.emit("session" + sessionID, message);
+        client.emit("session", message);
     },
 
     // Sends a message to the server log
@@ -94,7 +102,8 @@ module.exports = {
     joinSession: function(session_id){
         sessionID = session_id;
 
-        // TODO add listener for messages to the session id
+        client.emit("change session", sessionID);
+
         // TODO ask for members, current patches, info etc.
 
     },

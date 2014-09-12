@@ -1,3 +1,20 @@
+
+// Relates sessionIDs to a list of all sockets currently in session
+var sessionMembers = {
+    0:[]
+};
+
+// Remove client from previous session
+function removeFromSession(clientSocket, sessionID){
+    for (var i = 0;i < sessionMembers[sessionID].length; i++){
+        if (sessionMembers[sessionID] == clientSocket){
+            sessionMembers.splice(i,1);
+            return true;
+        }
+    }
+    return false;
+}
+
 module.exports = {
 
     // Starts the socket controller on the given port
@@ -14,6 +31,12 @@ module.exports = {
             // Give this socket it's unique connectionID
             var connectionID = lastConnectionID++;
 
+            // Current session client is in
+            var sessionID = 0;
+
+            // Add client to default session
+            sessionMembers[sessionID].push(socket);
+
             // Log client number
             console.log("Client[" + connectionID + "] Connected");
 
@@ -29,11 +52,41 @@ module.exports = {
             // Listen for all public messages
             socket.on("public", function(data){
                 console.log("public["+connectionID+"]>", data);
+                socket.broadcast.emit("public", data);
             });
 
             // Listen for all private client messages
             socket.on("private", function(data){
                 console.log("private["+connectionID+"]>", data);
+            });
+
+            // Listen for client change session message
+            socket.on("change session" , function(data){
+                console.log("change_session["+connectionID+"]>", data);
+
+                // Remove client from previous session
+                removeFromSession(socket, sessionID);
+
+                // Add client to new session
+                sessionID = parseInt(data);
+
+                // Create session member list if it doesn't already exist
+                if (!sessionMembers[sessionID])
+                    sessionMembers[sessionID] = [];
+
+                // Add client to new session
+                sessionMembers[sessionID].push(socket);
+
+            });
+
+            // Listen for client session messages
+            socket.on("session", function(data){
+                console.log("session["+connectionID+"]->s["+sessionID+"]>",data);
+
+                // Send message to all people in session
+                for (var i = 0;i < sessionMembers[sessionID].length;i++){
+                    sessionMembers[sessionID][i].emit("session", data);
+                }
             });
 
             // Log anything the client wants to log
@@ -44,6 +97,9 @@ module.exports = {
             // Listen for the client's disconnect
             socket.on('disconnect', function () {
                 console.log("Client[" + connectionID + "] Disconnected");
+
+                // Remove client from current session
+                removeFromSession(socket, sessionID);
             });
 
         });
