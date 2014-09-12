@@ -1,30 +1,147 @@
 
 var io = require('socket.io-client');
 
+// Listeners for various events, each event has a list of function callbacks
+// that will be called when the event occurs
+var listeners = {
+    // Each function takes (data, who)
+    onPrivateMessage : [],
+    // Each function takes (data, who)
+    onPublicMessage  : [],
+    // Each function takes (data, who)
+    onSessionMessage : []
+};
+
+// Session ID of session client is currently in
+var sessionID = 0;
+
+function callAllListeners(listenerList, data){
+    for (var i = 0;i < listenerList.length; i++){
+        listenerList[i](data);
+    }
+}
+
+var client, connectionID;
+
 module.exports = {
-    connect : function (port){
+
+    // Call to connect to server at port
+    connect : function (port, connectionCallback){
         port = port || 4444;
 
         // Connect to the socket controller/server
-        var client = io.connect("http://localhost:" + port);
-        var connectionID = null;
+        client = io.connect("http://localhost:" + port);
+        connectionID = null;
 
         // Listen for connection to server
         client.on('connect', function () {
             console.log("Connected to Server");
+            connectionCallback();
         });
 
         // Listen for server indication connectionID
         client.on('youare', function(data){
             console.log("Connected as Client["+data+"]");
+
+            // Remove previous connection listener
+            if (connectionID != null){
+                client.removeAllListeners("client" + connectionID);
+            }
+
             connectionID = parseInt(data);
+
+        });
+
+        // Listen for private messages
+        client.on('private', function(data){
+            callAllListeners(listeners.onPrivateMessage, data);
+        });
+
+        // Listen for public messages
+        client.on("public", function(){
+            callAllListeners(listeners.onPublicMessage, data);
         });
 
         // Listen for client disconnecting
         client.on("disconnect", function() {
             console.log("Disconnected");
         });
+    },
 
+    // ------------------------------------------------------------------------
+    // BASIC MESSAGES
+    // ------------------------------------------------------------------------
 
+    // Send a public message to everyone connected to the socket
+    sendPublicMessage: function(message){
+        client.emit("public", message);
+    },
+
+    // Sends a message to everyone in the session
+    sendSessionMessage: function(message){
+        client.emit("session" + sessionID, message);
+    },
+
+    // Sends a message to the server log
+    sendLogMessage: function(message){
+        client.emit("log", message);
+    },
+
+    // ------------------------------------------------------------------------
+    // BASIC ACTIONS
+    // ------------------------------------------------------------------------
+
+    joinSession: function(session_id){
+        sessionID = session_id;
+
+        // TODO add listener for messages to the session id
+        // TODO ask for members, current patches, info etc.
+
+    },
+
+    // ------------------------------------------------------------------------
+    // LISTENER LOGIC
+    // ------------------------------------------------------------------------
+
+    // Add function listener for private messages to this client
+    addPrivateMessageListener: function(callback){
+        listeners.onPrivateMessage.push(callback);
+    },
+
+    // Add function listener for public messages to this client
+    addPublicMessageListener: function(callback){
+        listeners.onPublicMessage.push(callback);
+    },
+
+    // Add function listener for session messages to this client
+    addSessionMessageListener: function(callback){
+        listeners.onSessionMessage.push(callback);
+    },
+
+    // Remove function listener for private messages to this client
+    removePrivateMessageListener: function(callback){
+        for (var i = 0; i < listeners.onPrivateMessage.length; i ++){
+            if (listeners[i] == callback){
+                listeners.splice(i,1);
+            }
+        }
+    },
+
+    // Remove function listener for public messages to this client
+    removePublicMessageListener: function(callback){
+        for (var i = 0; i < listeners.onPublicMessage.length; i ++){
+            if (listeners[i] == callback){
+                listeners.splice(i,1);
+            }
+        }
+    },
+
+    // Remove function listener for session messages to this client
+    removeSessionMessageListener: function(callback){
+        for (var i = 0; i < listeners.onSessionMessage.length; i ++){
+            if (listeners[i] == callback){
+                listeners.splice(i,1);
+            }
+        }
     }
 };

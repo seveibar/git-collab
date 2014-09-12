@@ -26,16 +26,26 @@ module.exports = {
                 socket.emit("youare", connectionID);
             });
 
+            // Listen for all public messages
+            socket.on("public", function(data){
+                console.log("public["+connectionID+"]>", data);
+            });
+
+            // Listen for all private client messages
+            socket.on("private", function(data){
+                console.log("private["+connectionID+"]>", data);
+            });
+
+            // Log anything the client wants to log
+            socket.on('log', function(data) {
+                console.log("log["+connectionID+"]>",data);
+            });
+
             // Listen for the client's disconnect
             socket.on('disconnect', function () {
                 console.log("Client[" + connectionID + "] Disconnected");
             });
 
-        });
-
-        // Log anything the client wants to log
-        io.on('log', function(data) {
-            console.log(data);
         });
 
     }
