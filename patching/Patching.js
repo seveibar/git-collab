@@ -32,6 +32,17 @@ Patch.prototype.hasPriority = function(otherPatch){
     return false;
 };
 
+// Serialize the patch into JSON
+Patch.prototype.serialize = function(){
+    return JSON.stringify({
+        "sender": this.sender,
+        "time": this.time,
+        "data": this.data,
+        "parent": this.parent,
+        "id": this.id
+    },null,4);
+};
+
 // path: String file system path
 // revision: Patch last patch applied
 function FileContent(path, revision){
@@ -75,6 +86,9 @@ FileContent.prototype.patch = function(patch){
     this.revision = patch;
     this.content = patchResults[0];
 
+    // Update the actual file system
+    fs.writeFileSync(this.path, this.content);
+
     // TODO Send a hash
 };
 
@@ -88,7 +102,7 @@ FileContent.prototype.update = function(clientID){
     var newContent = fs.readFileSync(this.path,"utf8");
     // TODO make a real hash id
     var id = time + sender;
-    var parent = this.revision.id;
+    var parent = this.revision.id || 0;
 
     // Return null patch if there are no changes
     if (newContent == this.content)
@@ -108,11 +122,13 @@ FileContent.prototype.update = function(clientID){
 };
 
 module.exports = {
-    createPatch: function(filePath){
+    createPatch: function(filePath,clientID){
         if (contents[filePath]){
-            return contents[filePath].update();
+            return contents[filePath].update(clientID);
         }else{
-            contents[filePath] = new FileContent(filePath, 0);
+            contents[filePath] = new FileContent(
+                filePath,
+                new Patch(0,0,0,0));
             return null;
         }
     },
@@ -120,9 +136,19 @@ module.exports = {
         if (contents[filePath]){
             return contents[filePath].patch(patch);
         }else{
-            contents[filePath] = new FileContent(filePath, 0);
+            contents[filePath] = new new FileContent(
+                filePath,
+                new Patch(0,0,0,0));
             return contents[filePath].patch(patch);
         }
+    },
+    serializePatch: function(patch){
+        return patch.serialize();
+    },
+    deserializePatch: function(patchJSON){
+        patchJSON = JSON.parse(patchJSON);
+        return new Patch(patchJSON.sender, patchJSON.time,
+                         patchJSON.data, patchJSON.parent);
     }
 };
 
