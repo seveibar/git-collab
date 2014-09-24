@@ -26,8 +26,12 @@ var client, connectionID;
 module.exports = {
 
     // Call to connect to server at port
-    connect : function (port, connectionCallback){
+    connect : function (port, connectionCallback, logHeader){
         port = port || 4444;
+
+        // Every log message is prefaced with this
+        // (for multiple clients on a single cpu)
+        logHeader = logHeader || "";
 
         // Connect to the socket controller/server
         client = io.connect("http://localhost:" + port);
@@ -41,7 +45,7 @@ module.exports = {
 
         // Listen for server indication connectionID
         client.on('youare', function(data){
-            console.log("Connected as Client["+data+"]");
+            console.log(logHeader, "Connected as Client["+data+"]");
 
             // Remove previous connection listener
             if (connectionID != null){
@@ -54,25 +58,25 @@ module.exports = {
 
         // Listen for private messages
         client.on('private', function(data){
-            console.log("private>", data);
+            console.log(logHeader, "private>", data);
             callAllListeners(listeners.onPrivateMessage, data);
         });
 
         // Listen for public messages
         client.on("public", function(data){
-            console.log("public>", data);
+            console.log(logHeader, "public>", data);
             callAllListeners(listeners.onPublicMessage, data);
         });
 
         // Listen for all session messages
         client.on("session", function(data){
-            console.log("session>", data);
+            console.log(logHeader, "session>", data);
             callAllListeners(listeners.onSessionMessage,data);
         });
 
         // Listen for client disconnecting
         client.on("disconnect", function() {
-            console.log("Disconnected");
+            console.log(logHeader, "Disconnected");
         });
     },
 
@@ -152,5 +156,11 @@ module.exports = {
                 listeners.splice(i,1);
             }
         }
+    },
+
+
+    // Sets the log header to preface log messages with
+    setLogHeader: function(header){
+        logHeader = header;
     }
 };

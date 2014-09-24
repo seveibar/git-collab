@@ -9,7 +9,7 @@ client.connect(4444, function(){
     client.joinSession(1);
 
     setTimeout(function(){
-        client.sendSessionMessage("Hello private session!");
+        client.sendSessionMessage("Hello session!");
     },1000);
 
 });
