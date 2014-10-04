@@ -25,9 +25,9 @@ function Patch(sender, time, data, parent){
 // Priority determines ordering of patches, patches are first sorted by time
 // then by the client with the lowest client id
 Patch.prototype.hasPriority = function(otherPatch){
-    if (this.time > otherPatch.time)
+    if (this.time >= otherPatch.time)
         return true;
-    if (this.time == otherPatch.time && this.sender < otherPatch.sender)
+    if (this.time == otherPatch.time && this.sender <= otherPatch.sender)
         return true;
     return false;
 };
@@ -40,7 +40,7 @@ Patch.prototype.serialize = function(){
         "data": this.data,
         "parent": this.parent,
         "id": this.id
-    },null,4);
+    });
 };
 
 // path: String file system path
@@ -57,6 +57,7 @@ FileContent.prototype.patch = function(patch){
 
     // First, determine whether or not this patch has priority over
     // the current patch
+    console.log(this.revision.hasPriority(patch));
     if (this.revision.hasPriority(patch)){
         // We don't need to do anything, this patch is more recent
         // (discard the other patch)
