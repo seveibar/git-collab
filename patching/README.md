@@ -6,18 +6,42 @@ It can create and apply patches.
 
 ## API
 
-### trackFile(filePath)
+### fileSystem.createPatch(filePath, clientID)
 
-Mark file to be tracked for patching and store base "master" state
+Returns a patch marked with the current client's clientID if the file has been changed.
 
-### markChanges() => patchData
+### fileSystem.applyPatch(filePath, patch)
 
-Return file changes as patch and mark this patch as patch appending approval
+Applies patch to file on file system
 
-### patchApproved()
+### editor.createPatch(filePath, clientID)
 
-Set base state to last markChanges state
+Returns a patch marked with the current client's clientID if the file within the editor has been changed.
 
-### patchFile(patchData)
+### editor.applyPatch(filePath, patch)
 
-Updates file with patch and set base state to patched file
+Applies patch to file within editor, this can propogate to the file system.
+
+### serializePatch(patch)
+
+Converts patch to JSON object
+
+### deserializePatch(patchJSON)
+
+Converts json to patch object
+
+## Objects
+
+### Patch
+Contains the following properties
+* sender = Client that sent the patch
+* time = Time patch was created
+* data = Diff-Match-Patch data i.e. how to patch the content
+* parent = The parent patch ID
+* id = The patch ID
+
+### File Content
+Stores file content for a client syncing a filesystem
+* path = Path to file
+* content = Current file content
+* revision = last patch applied
