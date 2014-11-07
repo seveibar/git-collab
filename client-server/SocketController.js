@@ -7,12 +7,23 @@ var sessionMembers = {
 // Remove client from previous session
 function removeFromSession(clientSocket, sessionID){
     for (var i = 0;i < sessionMembers[sessionID].length; i++){
-        if (sessionMembers[sessionID] == clientSocket){
-            sessionMembers.splice(i,1);
+        if (sessionMembers[sessionID][i] == clientSocket){
+            sessionMembers[sessionID].splice(i,1);
             return true;
         }
     }
     return false;
+}
+
+// Get the session host
+function getSessionHost(sessionID){
+    var lowest = sessionMembers[sessionID][0];
+    for (var i = 0;i < sessionMembers[sessionID].length; i++){
+        if (sessionMembers[sessionID][i].connectionID < lowest.connectionID){
+            lowest = sessionMembers[sessionID][i];
+        }
+    }
+    return lowest;
 }
 
 module.exports = {
@@ -29,7 +40,7 @@ module.exports = {
         io.on('connection', function (socket) {
 
             // Give this socket it's unique connectionID
-            var connectionID = lastConnectionID++;
+            var connectionID = socket.connectionID = lastConnectionID++;
 
             // Current session client is in
             var sessionID = 0;
@@ -55,9 +66,18 @@ module.exports = {
                 socket.broadcast.emit("public", data);
             });
 
+            // Listen for all messages to be directed to the host
+            socket.on("host", function(data){
+                console.log("host["+connectionID+"]", data);
+                console.log(sessionMembers[sessionID].length);
+                console.log(getSessionHost(sessionID).connectionID);
+                getSessionHost(sessionID).emit("host", data);
+            });
+
             // Listen for all private client messages
             socket.on("private", function(data){
                 console.log("private["+connectionID+"]>", data);
+                console.log("TODO implement private");
             });
 
             // Listen for client change session message
@@ -99,7 +119,7 @@ module.exports = {
                 console.log("Client[" + connectionID + "] Disconnected");
 
                 // Remove client from current session
-                removeFromSession(socket, sessionID);
+                console.log(removeFromSession(socket, sessionID));
             });
 
         });
