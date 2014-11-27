@@ -6,7 +6,13 @@ client.connect("http://localhost:4444", function(){
 
     client.sendPublicMessage("hello everyone!");
 
-    client.joinSession(1);
+    var ses = Math.floor(Math.random() * 4);
+
+    client.joinSession(ses);
+
+    client.setSessionDescription(["cat", "dog", "kitty", "puppy"][ses]);
+
+    client.getSessionsInfo();
 
     setTimeout(function(){
         client.sendSessionMessage("Hello session!");

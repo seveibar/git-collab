@@ -4,6 +4,11 @@ var sessionMembers = {
     0:[]
 };
 
+// Relates sessionIDs to a description
+var sessionDescriptions = {
+    0: ""
+};
+
 // Remove client from previous session
 function removeFromSession(clientSocket, sessionID){
     for (var i = 0;i < sessionMembers[sessionID].length; i++){
@@ -99,6 +104,31 @@ module.exports = {
                 // Add client to new session
                 sessionMembers[sessionID].push(socket);
 
+            });
+
+            // Listen for client set session description
+            socket.on("session description", function(data){
+                console.log("session_description["+connectionID+"]", data);
+
+                // Set desciption of the client's session
+                sessionDescriptions[sessionID] = data;
+            });
+
+            // Listen for client requesting session size
+            socket.on("session size", function(){
+                console.log("session_size["+connectionID+"])");
+
+                // Return the number of members of the session
+                socket.emit("session size", sessionMembers[sessionID].length);
+            });
+
+            // Listen for client requesting information about all sockets
+            socket.on("sessions info" , function(){
+                console.log("sessions_info["+connectionID+"]");
+
+                // TODO trim descriptions so that empty sessions don't appear
+
+                socket.emit("sessions info", sessionDescriptions);
             });
 
             // Listen for client session messages

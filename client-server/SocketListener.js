@@ -23,6 +23,11 @@ function callAllListeners(listenerList, data){
 
 var client, connectionID;
 
+// Consolidate session specific variables into a class that can be cleared
+var sessionSize;
+
+var onJoinSession;
+
 module.exports = {
 
     // Call to connect to server at url
@@ -55,6 +60,16 @@ module.exports = {
 
             connectionID = parseInt(data);
 
+        });
+
+        // Listen for session size information
+        client.on("session size", function(data){
+            console.log("Session Size =", data);
+            sessionSize = data;
+            // TODO if all information...
+            if (onJoinSession){
+                onJoinSession();
+            }
         });
 
         // Listen for private messages
@@ -104,13 +119,35 @@ module.exports = {
     // BASIC ACTIONS
     // ------------------------------------------------------------------------
 
-    joinSession: function(session_id){
+    joinSession: function(session_id, onJoin){
         sessionID = session_id;
+        onJoinSession = onJoin;
 
         client.emit("change session", sessionID);
 
+        sessionSize = null;
+        client.emit("session size");
+
         // TODO ask for members, current patches, info etc.
 
+    },
+
+    getSessionsInfo: function(){
+        client.emit("sessions info")
+
+        function onSessionInfo(data){
+
+            console.log(data);
+
+            client.removeListener("sessions info", onSessionInfo);
+        }
+
+        client.on("sessions info", onSessionInfo);
+
+    },
+
+    setSessionDescription: function(description){
+        client.emit("session description", description);
     },
 
     // ------------------------------------------------------------------------
