@@ -31,6 +31,8 @@ module.exports = {
     // Starts the socket controller on the given port
     start : function start(port){
 
+        console.log("Starting Git-Collab Server on http://localhost:" + port);
+
         var io = require("socket.io").listen(port || 4444);
 
         // Tracks all client

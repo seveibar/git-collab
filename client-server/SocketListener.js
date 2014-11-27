@@ -25,16 +25,17 @@ var client, connectionID;
 
 module.exports = {
 
-    // Call to connect to server at port
-    connect : function (port, connectionCallback, logHeader){
-        port = port || 4444;
+    // Call to connect to server at url
+    connect : function (url, connectionCallback, logHeader){
+
+        console.log("Attempting to connect to Git-Collab server at " + url);
 
         // Every log message is prefaced with this
         // (for multiple clients on a single cpu)
         logHeader = logHeader || "";
 
         // Connect to the socket controller/server
-        client = io.connect("http://localhost:" + port);
+        client = io.connect(url);
         connectionID = null;
 
         // Listen for connection to server
