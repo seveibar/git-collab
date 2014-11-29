@@ -72,6 +72,13 @@ module.exports = {
             }
         });
 
+        // Listen for session id information
+        // (Server telling you what your ID is)
+        client.on("session id", function(data){
+            console.log("New Session ID:", data);
+            sessionID = data;
+        });
+
         // Listen for private messages
         client.on('private', function(data){
             console.log(logHeader, "private>", data);
@@ -132,12 +139,12 @@ module.exports = {
 
     },
 
-    getSessionsInfo: function(){
+    getSessionsInfo: function(infoCallback){
         client.emit("sessions info")
 
         function onSessionInfo(data){
 
-            console.log(data);
+            infoCallback(data);
 
             client.removeListener("sessions info", onSessionInfo);
         }

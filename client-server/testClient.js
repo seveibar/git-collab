@@ -12,7 +12,9 @@ client.connect("http://localhost:4444", function(){
 
     client.setSessionDescription(["cat", "dog", "kitty", "puppy"][ses]);
 
-    client.getSessionsInfo();
+    client.getSessionsInfo(function(data){
+        console.log(data);
+    });
 
     setTimeout(function(){
         client.sendSessionMessage("Hello session!");
