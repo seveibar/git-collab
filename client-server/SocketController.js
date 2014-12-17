@@ -9,6 +9,9 @@ var sessionDescriptions = {
     0: ""
 };
 
+// Keeps track of sessions created so unique session IDs can be created
+var lastSessionID = -1;
+
 // Remove client from previous session
 function removeFromSession(clientSocket, sessionID){
     for (var i = 0;i < sessionMembers[sessionID].length; i++){
@@ -50,9 +53,13 @@ module.exports = {
             var connectionID = socket.connectionID = lastConnectionID++;
 
             // Current session client is in
-            var sessionID = 0;
+            var sessionID = ++lastSessionID;
 
             // Add client to default session
+            if (!sessionMembers[sessionID]){
+                sessionMembers[sessionID] = [];
+                sessionDescriptions[sessionID] = "";
+            }
             sessionMembers[sessionID].push(socket);
 
             // Log client number
@@ -60,6 +67,7 @@ module.exports = {
 
             // Tell the client what their connectionID is
             socket.emit("youare", connectionID);
+            socket.emit("session id", sessionID);
 
             // Listen for the client if they want to know what their connection
             // ID is.
