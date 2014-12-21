@@ -24,7 +24,7 @@ function callAllListeners(listenerList, data){
 var client, connectionID;
 
 // Consolidate session specific variables into a class that can be cleared
-var sessionSize;
+var sessionData;
 
 var onJoinSession;
 
@@ -46,7 +46,8 @@ module.exports = {
         // Listen for connection to server
         client.on('connect', function () {
             console.log("Connected to Server");
-            connectionCallback();
+            client.emit("session info");
+            onJoinSession = connectionCallback;
         });
 
         // Listen for server indication connectionID
@@ -63,12 +64,12 @@ module.exports = {
         });
 
         // Listen for session size information
-        client.on("session size", function(data){
-            console.log("Session Size =", data);
-            sessionSize = data;
-            // TODO if all information...
+        client.on("session info", function(data){
+            console.log("Session Info: ", data);
+            sessionData = data;
             if (onJoinSession){
-                onJoinSession();
+                onJoinSession(sessionData);
+                onJoinSession = null;
             }
         });
 
@@ -132,11 +133,21 @@ module.exports = {
 
         client.emit("change session", sessionID);
 
-        sessionSize = null;
-        client.emit("session size");
+        sessionData = null;
+        client.emit("session info");
 
         // TODO ask for members, current patches, info etc.
 
+    },
+
+    getSessionSize: function(){
+        return sessionData.sessionSize;
+    },
+    getStateRevision: function(){
+        return sessionData.stateRevision;
+    },
+    getSessionID: function(){
+        return sessionID;
     },
 
     getSessionsInfo: function(infoCallback){

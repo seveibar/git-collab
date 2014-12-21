@@ -9,6 +9,11 @@ var sessionDescriptions = {
     0: ""
 };
 
+// Relates sessionIDs to state revisions
+var sessionStateRevision = {
+    0: 0
+};
+
 // Keeps track of sessions created so unique session IDs can be created
 var lastSessionID = -1;
 
@@ -59,6 +64,7 @@ module.exports = {
             if (!sessionMembers[sessionID]){
                 sessionMembers[sessionID] = [];
                 sessionDescriptions[sessionID] = "";
+                sessionStateRevision[sessionID] = 0;
             }
             sessionMembers[sessionID].push(socket);
 
@@ -123,11 +129,15 @@ module.exports = {
             });
 
             // Listen for client requesting session size
-            socket.on("session size", function(){
-                console.log("session_size["+connectionID+"])");
+            socket.on("session info", function(){
+                console.log("session_info["+connectionID+"])");
 
                 // Return the number of members of the session
-                socket.emit("session size", sessionMembers[sessionID].length);
+                socket.emit("session info",{
+                    "sessionSize": sessionMembers[sessionID].length,
+                    "stateRevision": sessionStateRevision[sessionID]
+
+                });
             });
 
             // Listen for client requesting information about all sockets
