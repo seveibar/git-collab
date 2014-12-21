@@ -151,7 +151,7 @@ module.exports = {
     },
 
     getSessionsInfo: function(infoCallback){
-        client.emit("sessions info")
+        client.emit("sessions info");
 
         function onSessionInfo(data){
 
